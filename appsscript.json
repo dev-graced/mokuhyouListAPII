@@ -1,0 +1,21 @@
+{
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "LWAPI",
+        "version": "0",
+        "libraryId": "1SEhvSN3z7vd8q0hOkjw95IMUNlQnxbjYL5NeuFmbloLzFqRy7-0bPHIw",
+        "developmentMode": true
+      },
+      {
+        "userSymbol": "Homon",
+        "version": "0",
+        "libraryId": "1kJ18HSx7kAfMNV6a5XjSHjhAAJIq2o2VFTg_67gcX_hes794sG6wID0L",
+        "developmentMode": true
+      }
+    ]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
+}
