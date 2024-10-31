@@ -11,9 +11,12 @@ const CONFIG = {
   // LINE WORKS関連ID
   LINE_WORKS: {
     DEVELOPER_ID: "d6adfeb2-a185-4490-14af-057a829ebbdb",
-    MORIYA_KEIGO_ID: "c15a9e50-b91f-46da-143c-0523d0dd98ed",
-    MORIYA_KUMI_ID: "be779cf7-42fb-4a9d-1e9e-052170b4a8fb",
-    NISHIMURA_ID: "ab78e79e-6e5b-4abd-1754-058430364435",
+    // MORIYA_KEIGO_ID: "c15a9e50-b91f-46da-143c-0523d0dd98ed",
+    // MORIYA_KUMI_ID: "be779cf7-42fb-4a9d-1e9e-052170b4a8fb",
+    // NISHIMURA_ID: "ab78e79e-6e5b-4abd-1754-058430364435",
+    MORIYA_KEIGO_ID: "",
+    MORIYA_KUMI_ID: "",
+    NISHIMURA_ID: "",
     BOT_ID: "1420729"  // 東風会スタッフBotID
   },
 

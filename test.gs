@@ -8,22 +8,35 @@ function test_getNameByMmberId(){
   console.log("氏名:"+result[0]+" 姓："+result[1]+"　名："+result[2]);
 }
 
-function test_getOrgByMmberId(){
-  let memberId = "e1c9ba2b-4ffb-47cc-1aa2-050144327fa9";
-  let result = getOrgByMmberId(memberId);
+function testMethod_getMmberInfo(){
 
-  if(result[1]){
-    console.log(result[1]);
+  const dbService = new DatabaseService();
+
+  const memberId = "e1c9ba2b-4ffb-47cc-1aa2-050144327fa9";
+  const member = dbService.getMemberInfo(memberId);
+
+  if(member.error){
+    console.log(member.error);
   }
-  console.log("組織名:"+result[0]);
+  console.log("氏名:",member.fullName,"姓:",member.lastName,"名:",member.firstName,"組織名:"+ member.org);
 }
 
 function test_notifyApprovalRequest(){
-  let mokuhyouId = "41f8e952";
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
   notifyApprovalRequest(mokuhyouId);
 }
 
 function test_notifyApprovalRequestCancel(){
-  let mokuhyouId = "41f8e952";
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
   notifyApprovalRequestCancel(mokuhyouId);
+}
+
+function test_notifyDenial(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyDenial(mokuhyouId);
+}
+
+function test_notifyApproval(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyApproval(mokuhyouId);
 }
