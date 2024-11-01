@@ -26,100 +26,84 @@ class NotificationService {
       [CONFIG.LINE_WORKS.NISHIMURA_ID];
   }
 
-  async notifyApprovalRequest(mokuhyouId) {
-    if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return;
+  // 目標情報と申請者情報を取得する共通処理
+  async fetchMokuhyouData(mokuhyouId) {
+    if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return null;
 
     const mokuhyouInfo = this.dbService.getMokuhyouInfo(mokuhyouId);
     if (mokuhyouInfo.error) {
       this.notifyDeveloper(mokuhyouInfo.error);
-      return;
+      return null;
     }
 
     const applicantInfo = this.dbService.getMemberInfo(mokuhyouInfo.applicantId);
     if (applicantInfo.error) {
       this.notifyDeveloper(applicantInfo.error);
-      return;
+      return null;
     }
 
+    return { mokuhyouInfo, applicantInfo };
+  }
+
+  // 開発者への通知を送信する共通処理
+  async sendDeveloperNotification(recipientName, message, buttonData = null) {
+    const devMessage = `【システム通知】\n\n${recipientName}さんに以下の通知を送りました。\n\n${message}`;
+    
+    if (buttonData) {
+      await LWAPI.send1ButtonMsg([devMessage, ["uri", buttonData.label, buttonData.uri]], CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+    } else {
+      await LWAPI.sendTextMsg(devMessage, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+    }
+  }
+
+  async notifyApprovalRequest(mokuhyouId) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo, applicantInfo } = data;
     const message = this.createApprovalRequestMessage(applicantInfo.org, mokuhyouInfo.title);
     const uri = `${CONFIG.APP_URL}#view=医院目標リスト_Detail&row=${mokuhyouId}`;
-    const buttonMsg = [message, ["uri", "アプリで内容を確認", uri]];
+    const buttonData = { label: "アプリで内容を確認", uri };
+    const buttonMsg = [message, ["uri", buttonData.label, buttonData.uri]];
 
     for (const approverId of this.getApproverIds()) {
       const approverInfo = this.dbService.getMemberInfo(approverId);
       const targetId = CONFIG.OPERATION.USE_TEST_APPROVER ? CONFIG.LINE_WORKS.DEVELOPER_ID : approverId;
       
       await LWAPI.send1ButtonMsg(buttonMsg, targetId, this.env);
-      
-      const devMessage = `【システム通知】\n\n${approverInfo.lastName}さんに以下の通知を送りました。\n\n${message}`;
-      const devButtonMsg = [devMessage, ["uri", "アプリで内容を確認", uri]];
-      await LWAPI.send1ButtonMsg(devButtonMsg, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+      await this.sendDeveloperNotification(approverInfo.lastName, message, buttonData);
     }
   }
 
   async notifyDenial(mokuhyouId) {
-    if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return;
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
 
-    const mokuhyouInfo = this.dbService.getMokuhyouInfo(mokuhyouId);
-    if (mokuhyouInfo.error) {
-      this.notifyDeveloper(mokuhyouInfo.error);
-      return;
-    }
-
-    const applicantInfo = this.dbService.getMemberInfo(mokuhyouInfo.applicantId);
-    if (applicantInfo.error) {
-      this.notifyDeveloper(applicantInfo.error);
-      return;
-    }
-
+    const { mokuhyouInfo, applicantInfo } = data;
     const message = this.createDenialMessage(mokuhyouInfo.title);
     const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
 
     await LWAPI.sendTextMsg(message, targetId, this.env);
-    
-    const devMessage = `【システム通知】\n\n${applicantInfo.fullName}さんに以下の通知を送りました。\n\n${message}`;
-    await LWAPI.sendTextMsg(devMessage, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+    await this.sendDeveloperNotification(applicantInfo.fullName, message);
   }
 
   async notifyApproval(mokuhyouId) {
-    if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return;
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
 
-    const mokuhyouInfo = this.dbService.getMokuhyouInfo(mokuhyouId);
-    if (mokuhyouInfo.error) {
-      this.notifyDeveloper(mokuhyouInfo.error);
-      return;
-    }
-
-    const applicantInfo = this.dbService.getMemberInfo(mokuhyouInfo.applicantId);
-    if (applicantInfo.error) {
-      this.notifyDeveloper(applicantInfo.error);
-      return;
-    }
-
+    const { mokuhyouInfo, applicantInfo } = data;
     const message = this.createApprovalMessage(mokuhyouInfo.title);
     const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
 
     await LWAPI.sendTextMsg(message, targetId, this.env);
-    
-    const devMessage = `【システム通知】\n\n${applicantInfo.fullName}さんに以下の通知を送りました。\n\n${message}`;
-    await LWAPI.sendTextMsg(devMessage, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+    await this.sendDeveloperNotification(applicantInfo.fullName, message);
   }
 
   async notifyApprovalRequestCancel(mokuhyouId) {
-    if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return;
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
 
-    const mokuhyouInfo = this.dbService.getMokuhyouInfo(mokuhyouId);
-    if (mokuhyouInfo.error) {
-      this.notifyDeveloper(mokuhyouInfo.error);
-      return;
-    }
-
-    const applicantInfo = this.dbService.getMemberInfo(mokuhyouInfo.applicantId);
-    if (applicantInfo.error) {
-      this.notifyDeveloper(applicantInfo.error);
-      return;
-    }
-
+    const { mokuhyouInfo, applicantInfo } = data;
     const message = this.createCancelMessage(applicantInfo.org, mokuhyouInfo.title);
 
     for (const approverId of this.getApproverIds()) {
@@ -127,9 +111,7 @@ class NotificationService {
       const targetId = CONFIG.OPERATION.USE_TEST_APPROVER ? CONFIG.LINE_WORKS.DEVELOPER_ID : approverId;
       
       await LWAPI.sendTextMsg(message, targetId, this.env);
-      
-      const devMessage = `【システム通知】\n\n${approverInfo.lastName}さんに以下の通知を送りました。\n\n${message}`;
-      await LWAPI.sendTextMsg(devMessage, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
+      await this.sendDeveloperNotification(approverInfo.lastName, message);
     }
   }
 
