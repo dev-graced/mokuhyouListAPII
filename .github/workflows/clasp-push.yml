@@ -2,7 +2,7 @@ name: Push to Google Apps Script
 on:
   push:
     branches:
-      - main  # メインブランチにプッシュされた時に実行
+      - feature-evaluation  # プッシュされた時に実行するブランチ
 
 jobs:
   clasp-push:
