@@ -1,0 +1,27 @@
+name: Push to Google Apps Script
+on:
+  push:
+    branches:
+      - main  # メインブランチにプッシュされた時に実行
+
+jobs:
+  clasp-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Clasp
+        run: npm install -g @google/clasp
+
+      - name: Create clasprc.json
+        run: |
+          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+
+      - name: Push to Google Apps Script
+        run: clasp push
