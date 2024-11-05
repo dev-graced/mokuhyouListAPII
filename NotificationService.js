@@ -45,9 +45,10 @@ class NotificationService {
     return { mokuhyouInfo, applicantInfo };
   }
 
-  // 開発者への通知を送信する共通処理
+  /** 開発者への通知を送信する共通処理 */
   async sendDeveloperNotification(recipientName, message, buttonData = null) {
-    const devMessage = `【システム通知】\n\n${recipientName}さんに以下の通知を送りました。\n\n${message}`;
+    const notificationHeader = CONFIG.OPERATION.USE_TEST_APPROVER ? "【システム通知 (テスト)】" : "【システム通知】";
+    const devMessage = `${notificationHeader}\n\n${recipientName}さんに以下の通知を送りました。\n\n${message}`;
     
     if (buttonData) {
       await LWAPI.send1ButtonMsg([devMessage, ["uri", buttonData.label, buttonData.uri]], CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
@@ -56,6 +57,7 @@ class NotificationService {
     }
   }
 
+  /** 医院目標計画の承認リクエスト通知の処理 */
   async notifyApprovalRequest(mokuhyouId) {
     const data = await this.fetchMokuhyouData(mokuhyouId);
     if (!data) return;
@@ -75,6 +77,7 @@ class NotificationService {
     }
   }
 
+  /** 医院目標計画の差し戻し通知の処理 */
   async notifyDenial(mokuhyouId) {
     const data = await this.fetchMokuhyouData(mokuhyouId);
     if (!data) return;
@@ -87,6 +90,7 @@ class NotificationService {
     await this.sendDeveloperNotification(applicantInfo.fullName, message);
   }
 
+  /** 医院目標計画が承認されたことを通知する処理 */
   async notifyApproval(mokuhyouId) {
     const data = await this.fetchMokuhyouData(mokuhyouId);
     if (!data) return;
@@ -99,6 +103,7 @@ class NotificationService {
     await this.sendDeveloperNotification(applicantInfo.fullName, message);
   }
 
+  /** 医院目標計画の承認リクエスト取り下げの通知の処理 */
   async notifyApprovalRequestCancel(mokuhyouId) {
     const data = await this.fetchMokuhyouData(mokuhyouId);
     if (!data) return;
@@ -115,12 +120,80 @@ class NotificationService {
     }
   }
 
+  /** 医院目標計画の取り組み評価リクエスト通知の処理 */
+  async notifyEvaluationRequest(mokuhyouId) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo, applicantInfo } = data;
+    const message = this.createEvaluationRequestMessage(applicantInfo.org, mokuhyouInfo.title);
+    const uri = `${CONFIG.APP_URL}#view=医院目標リスト_Detail&row=${mokuhyouId}`;
+    const buttonData = { label: "アプリで内容を確認", uri };
+    const buttonMsg = [message, ["uri", buttonData.label, buttonData.uri]];
+
+    for (const approverId of this.getApproverIds()) {
+      const approverInfo = this.dbService.getMemberInfo(approverId);
+      const targetId = CONFIG.OPERATION.USE_TEST_APPROVER ? CONFIG.LINE_WORKS.DEVELOPER_ID : approverId;
+      
+      await LWAPI.send1ButtonMsg(buttonMsg, targetId, this.env);
+      await this.sendDeveloperNotification(approverInfo.lastName, message, buttonData);
+    }
+  }
+
+  /** 取り組み結果の差し戻し通知の処理 */
+  async notifyEvaluationDenial(mokuhyouId) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo, applicantInfo } = data;
+    const message = this.createEvaluationDenialMessage(mokuhyouInfo.title);
+    const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
+
+    await LWAPI.sendTextMsg(message, targetId, this.env);
+    await this.sendDeveloperNotification(applicantInfo.fullName, message);
+  }
+
+  /** 取り組み結果の評価が確定したことを通知する処理 */
+  async notifyEvaluation(mokuhyouId) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo, applicantInfo } = data;
+    const message = this.createEvaluationMessage(mokuhyouInfo.title);
+    const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
+
+    await LWAPI.sendTextMsg(message, targetId, this.env);
+    await this.sendDeveloperNotification(applicantInfo.fullName, message);
+  }
+
+  /** 取り組み結果の評価リクエスト取り下げの通知の処理 */
+  async notifyEvaluationRequestCancel(mokuhyouId) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo, applicantInfo } = data;
+    const message = this.createEvaluationRequestCancelMessage(applicantInfo.org, mokuhyouInfo.title);
+
+    for (const approverId of this.getApproverIds()) {
+      const approverInfo = this.dbService.getMemberInfo(approverId);
+      const targetId = CONFIG.OPERATION.USE_TEST_APPROVER ? CONFIG.LINE_WORKS.DEVELOPER_ID : approverId;
+      
+      await LWAPI.sendTextMsg(message, targetId, this.env);
+      await this.sendDeveloperNotification(approverInfo.lastName, message);
+    }
+  }
+
+  /** アプリ開発者へのシステム通知 */
   notifyDeveloper(message) {
     if (!CONFIG.OPERATION.NOTIFICATION_ENABLED) return;
     
     const devMessage = `【システム通知】\n\n${message}`;
     LWAPI.sendTextMsg(devMessage, CONFIG.LINE_WORKS.DEVELOPER_ID, this.env);
   }
+
+  /** 
+   * 通知メッセージ
+   */
 
   createApprovalRequestMessage(org, title) {
     return `医院目標の承認リクエストが来ています。\n\n${org}\n医院目標：${title}\n\nアプリで内容をご確認いただき、OKであれば、「承認」ボタンを、修正が必要であれば「差し戻す」ボタンを押してください。`;
@@ -137,4 +210,21 @@ class NotificationService {
   createCancelMessage(org, title) {
     return `以下の医院目標の承認リクエストがキャンセルされました。\n\n${org}\n医院目標：${title}\n\n医院目標は「作成中」の状態に戻ります。\n医院目標の承認を一旦中断してください。`;
   }
+
+  createEvaluationRequestMessage(org, title) {
+    return `取り組み結果の評価リクエストが来ています。\n\n${org}\n医院目標：${title}\n\nアプリで内容をご確認いただき、結果の評価をお願いします。修正が必要であれば「差し戻す」ボタンを押してください。`;
+  }
+
+  createEvaluationDenialMessage(title) {
+    return `医院目標\n\n${title}\n\nの取り組み結果が東風会本部から差し戻されました。\n\n 修正して、再度提出してください。\n 不明な点は、西村事務長にお問い合わせください。`;
+  }
+
+  createEvaluationMessage(title) {
+    return `医院目標\n\n${title}\n\nの取り組み結果の評価が終わりました。\nご確認をお願いします。`;
+  }
+
+  createEvaluationRequestCancelMessage(org, title) {
+    return `以下の医院目標の取り組み結果の評価リクエストがキャンセルされました。\n\n${org}\n医院目標：${title}\n\n医院目標は「承認済み」の状態に戻ります。\n取り組み結果の評価を一旦中断してください。`;
+  }
+
 }
