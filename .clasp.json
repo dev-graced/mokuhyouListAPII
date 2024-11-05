@@ -1,4 +1,5 @@
 {
     "scriptId": "1yME3SD6YPvCLdm-7ngQxaXq7cLWYVDbM-19jddCECgVp17gnac-xsXz9",
-    "rootDir": "./"
+    "rootDir": "./",
+    "filePushOrder": ["config.js", "DatabaseService.js","NotificationService.js","main.js","test.js","コード.js"]
   }
