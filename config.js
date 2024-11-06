@@ -2,7 +2,7 @@
 const CONFIG = {
   // 運用モード設定
   OPERATION: {
-    IS_PRODUCTION: false,  // false: テスト環境, true: 本番環境
+    IS_PRODUCTION: true,  // false: テスト環境, true: 本番環境
     NOTIFICATION_ENABLED: true,  // false: 通知無効, true: 通知有効
     USE_TEST_APPLICANT: true,  // false: 実際の申請者, true: 開発者ID
     USE_TEST_APPROVER: true,  // false: 実際の承認者, true: 開発者ID
