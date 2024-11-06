@@ -40,3 +40,23 @@ function test_notifyApproval(){
   let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
   notifyApproval(mokuhyouId);
 }
+
+function test_notifyEvaluationRequest(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyEvaluationRequest(mokuhyouId);
+}
+
+function test_notifyEvaluationRequestCancel(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyEvaluationRequestCancel(mokuhyouId);
+}
+
+function test_notifyEvaluationDenial(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyEvaluationDenial(mokuhyouId);
+}
+
+function test_notifyEvaluation(){
+  let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  notifyEvaluation(mokuhyouId);
+}
