@@ -159,11 +159,20 @@ class NotificationService {
     if (!data) return;
 
     const { mokuhyouInfo, applicantInfo } = data;
+
+    /** リンクボタン付きメッセージ内容の作成 */
     const message = this.createEvaluationMessage(mokuhyouInfo.title);
+    const uri = `${CONFIG.APP_URL}#view=医院目標リスト_Detail&row=${mokuhyouId}`;
+    const buttonData = { label: "アプリで内容を確認", uri };
+    const buttonMsg = [message, ["uri", buttonData.label, buttonData.uri]];
+
     const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
 
-    await LWAPI.sendTextMsg(message, targetId, this.env);
-    await this.sendDeveloperNotification(applicantInfo.fullName, message);
+    /** 通知メッセージの送信 */
+    // await LWAPI.sendTextMsg(message, targetId, this.env);
+    // await this.sendDeveloperNotification(applicantInfo.fullName, message);
+    await LWAPI.send1ButtonMsg(buttonMsg, targetId, this.env);
+    await this.sendDeveloperNotification(applicantInfo.fullName, message, buttonData);
   }
 
   /** 取り組み結果の評価リクエスト取り下げの通知の処理 */
@@ -220,11 +229,11 @@ class NotificationService {
   }
 
   createEvaluationMessage(title) {
-    return `医院目標\n\n${title}\n\nの取り組み結果の評価が終わりました。\nご確認をお願いします。`;
+    return `医院目標\n\n${title}\n\nの取り組み結果の評価が終わりました。\n\n医院目標アプリでご確認をお願いします。`;
   }
 
   createEvaluationRequestCancelMessage(org, title) {
-    return `以下の医院目標の取り組み結果の評価リクエストがキャンセルされました。\n\n${org}\n医院目標：${title}\n\n医院目標は「承認済み」の状態に戻ります。\n取り組み結果の評価を一旦中断してください。`;
+    return `以下の取り組み結果の評価リクエストがキャンセルされました。\n\n${org}\n医院目標：${title}\n\n医院目標は「承認済み」の状態に戻ります。\n取り組み結果の評価を一旦中断してください。`;
   }
 
 }
