@@ -1,5 +1,5 @@
 {
     "scriptId": "1yME3SD6YPvCLdm-7ngQxaXq7cLWYVDbM-19jddCECgVp17gnac-xsXz9",
     "rootDir": "./",
-    "filePushOrder": ["config.js", "DatabaseService.js","NotificationService.js","main.js","test.js","コード.js"]
+    "filePushOrder": ["config.gs", "DatabaseService.gs","NotificationService.gs","main.gs","test.gs","コード.gs"]
   }
