@@ -169,8 +169,6 @@ class NotificationService {
     const targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
 
     /** 通知メッセージの送信 */
-    // await LWAPI.sendTextMsg(message, targetId, this.env);
-    // await this.sendDeveloperNotification(applicantInfo.fullName, message);
     await LWAPI.send1ButtonMsg(buttonMsg, targetId, this.env);
     await this.sendDeveloperNotification(applicantInfo.fullName, message, buttonData);
   }
@@ -190,6 +188,40 @@ class NotificationService {
       await LWAPI.sendTextMsg(message, targetId, this.env);
       await this.sendDeveloperNotification(approverInfo.lastName, message);
     }
+  }
+
+  /** コメント投稿の通知処理 */
+  async notifyComment(mokuhyouId, senderId, comment) {
+    const data = await this.fetchMokuhyouData(mokuhyouId);
+    if (!data) return;
+
+    const { mokuhyouInfo } = data;
+    const senderInfo = this.dbService.getMemberInfo(senderId);
+    if (senderInfo.error) {
+      this.notifyDeveloper(senderInfo.error);
+      return;
+    }
+
+    const message = this.createCommentMessage(mokuhyouInfo.title, senderInfo.fullName, comment);
+    const uri = `${CONFIG.APP_URL}#view=医院目標リスト_Detail&row=${mokuhyouId}`;
+    const buttonData = { label: "アプリで内容を確認", uri };
+    const buttonMsg = [message, ["uri", buttonData.label, buttonData.uri]];
+
+    // 送信者の所属に応じて通知先を決定
+    let targetId;
+    if (senderInfo.org === "本部") {
+      // 本部からのコメントの場合は申請者に通知
+      targetId = CONFIG.OPERATION.USE_TEST_APPLICANT ? CONFIG.LINE_WORKS.DEVELOPER_ID : mokuhyouInfo.applicantId;
+    } else {
+      // 本部以外からのコメントの場合は西村さんに通知
+      targetId = CONFIG.OPERATION.USE_TEST_APPROVER ? CONFIG.LINE_WORKS.DEVELOPER_ID : CONFIG.LINE_WORKS.NISHIMURA_ID;
+    }
+
+    await LWAPI.send1ButtonMsg(buttonMsg, targetId, this.env);
+    const recipientInfo = targetId === mokuhyouInfo.applicantId ? 
+      this.dbService.getMemberInfo(mokuhyouInfo.applicantId) :
+      { fullName: "西村" };
+    await this.sendDeveloperNotification(recipientInfo.fullName, message, buttonData);
   }
 
   /** アプリ開発者へのシステム通知 */
@@ -236,4 +268,7 @@ class NotificationService {
     return `以下の取り組み結果の評価リクエストがキャンセルされました。\n\n${org}\n医院目標：${title}\n\n医院目標は「承認済み」の状態に戻ります。\n取り組み結果の評価を一旦中断してください。`;
   }
 
+  createCommentMessage(title, senderName, comment) {
+    return `医院目標\n\n${title}\n\nに${senderName}さんからコメントが投稿されました。\n\nコメント：\n${comment}`;
+  }
 }

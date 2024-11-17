@@ -60,3 +60,11 @@ function test_notifyEvaluation(){
   let mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
   notifyEvaluation(mokuhyouId);
 }
+
+function test_notifyComment(){
+  const mokuhyouId = "9c8f4b90"; //デモ用 物販20%UP
+  const senderId = "d6adfeb2-a185-4490-14af-057a829ebbdb";
+  const comment = "テスト投稿です";
+
+  notifyComment(mokuhyouId,senderId,comment);
+}

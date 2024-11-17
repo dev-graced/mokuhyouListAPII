@@ -56,3 +56,10 @@ function notifyEvaluation(mokuhyouId) {
 function notifyEvaluationRequestCancel(mokuhyouId) {
   notificationService.notifyEvaluationRequestCancel(mokuhyouId);
 }
+
+/**
+ * コメントの投稿を通知
+ */
+function notifyComment(mokuhyouId,senderId,comment) {
+  notificationService.notifyComment(mokuhyouId,senderId,comment);
+}
